@@ -48,7 +48,7 @@ files['package.json'] = {
 files['package.json'] = JSON.stringify(_.extend(files['package.json'],
   pkgs[pkg.type](pkg)['package.json']), null, 2);
 
-_.extend(files, {'gulpfile.js': "require('guzzle')();"});
+_.extend(files, {'gulpfile.js': "require('guzzle')(require('gulp'), __dirname);"});
 
 
 var gulp = require('gulp'),
@@ -68,62 +68,21 @@ var fudge = function(contents){
   });
 };
 
-var npm = {
-  install: function(){
-    return es.map(function(file, fn){
-      exec('npm install', {cwd: path.dirname(file.path)}, function(err){
-        fn(err, file);
-      });
-    });
-  },
-  link: function(name){
-    return es.map(function(file, fn){
-      exec('npm link ' + name, {cwd: path.dirname(file.path)}, function(err){
-        fn(err, file);
-      });
-    });
-  }
-};
-
 var dest = process.cwd() + '/' + pkg.name;
 
 gulp.task('default', function(){
   fudge(files['package.json'])
     .pipe(gulp.dest(dest + '/package.json'))
-    .pipe(npm.install())
-    .pipe(npm.link('guzzle'));
+    .pipe(function(){
+      return es.map(function(file, fn){
+        exec('npm install', {cwd: path.dirname(file.path)}, function(err){
+          fn(err, file);
+        });
+      });
+    }());
 
-  fudge("require('guzzle')(require('gulp'));")
+  fudge("require('guzzle')(require('gulp'), __dirname);")
     .pipe(gulp.dest(dest + '/gulpfile.js'));
 });
 
-
-
-//   function CompileJade(file, enc, cb){
-//     opts.filename = file.path;
-//     file.path = handleExtension(file.path, opts);
-
-//     if(file.isStream()){
-//       this.emit('error', new PluginError('gulp-jade', 'Streaming not supported'));
-//       return cb();
-//     }
-
-//     if(file.isBuffer()){
-//       try {
-//         file.contents = new Buffer(handleCompile(String(file.contents), opts));
-//       } catch(e) {
-//         this.emit('error', e);
-//       }
-//     }
-
-//     this.push(file);
-//     cb();
-//   }
-
-// return through.obj(CompileJade);
-
 gulp.start('default');
-// fs.writeFile('package.json')
-
-
-

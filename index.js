@@ -8,10 +8,12 @@ var browserify = require('gulp-browserify'),
   ltld = require('local-tld-lib'),
   fs = require('fs');
 
-module.exports = function(gulp){
-  var data = fs.readFileSync(process.cwd() + '/package.json', 'utf-8');
+module.exports = function(gulp, dir){
+  dir = dir || process.cwd();
+  var data = fs.readFileSync( + '/package.json', 'utf-8');
   var pkg = JSON.parse(data),
     type = pkg.guzzle || 'gulp plugin';
+  pkg.dir = dir;
 
   return gulps[type](pkg, gulp);
 };
@@ -20,8 +22,8 @@ module.exports = function(gulp){
 var gulps = {
   ui: function(pkg, gulp){
     var name = pkg.name,
-      dest = './.' + name,
-      src ='./' + name,
+      dest = pkg.dir + './.' + name,
+      src = pkg.dir + './',
       files = [src + '/{img,fonts,css,json,csv}/*', src + '/*.html'];
 
     gulp.task('js', function(){
@@ -31,7 +33,7 @@ var gulps = {
     });
 
     gulp.task('watch', function (){
-      gulp.watch(['!node_modules/**', src + '/{*,**/*}.{js}'], ['js']);
+      gulp.watch(['!' + src + '/node_modules/**', src + '/{*,**/*}.{js}'], ['js']);
       gulp.watch(files, ['cp']);
     });
 
