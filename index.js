@@ -10,7 +10,7 @@ var browserify = require('gulp-browserify'),
 
 module.exports = function(gulp, dir){
   dir = dir || process.cwd();
-  var data = fs.readFileSync( + '/package.json', 'utf-8');
+  var data = fs.readFileSync(dir + '/package.json', 'utf-8');
   var pkg = JSON.parse(data),
     type = pkg.guzzle || 'gulp plugin';
   pkg.dir = dir;
@@ -22,12 +22,12 @@ module.exports = function(gulp, dir){
 var gulps = {
   ui: function(pkg, gulp){
     var name = pkg.name,
-      dest = pkg.dir + './.' + name,
-      src = pkg.dir + './',
+      dest = pkg.dir + '/.' + name,
+      src = pkg.dir + '/',
       files = [src + '/{img,fonts,css,json,csv}/*', src + '/*.html'];
 
     gulp.task('js', function(){
-      gulp.src(src + '/*.js')
+      gulp.src(src + '/index.js')
         .pipe(browserify({debug : false}))
         .pipe(gulp.dest(dest));
     });
@@ -44,7 +44,7 @@ var gulps = {
     gulp.task('serve', function(){
       http.createServer(ecstatic({root: dest}))
         .listen(ltld.getPort(name));
-      console.log('-> http://' + name + '.dev/');
+      console.log('-> http://' + name + '.dev/', dest, 'port -> ', ltld.getPort(name));
     });
 
     gulp.task('build', ['js', 'cp']);
