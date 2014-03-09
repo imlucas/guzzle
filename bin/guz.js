@@ -45,8 +45,11 @@ files['package.json'] = {
   license: 'MIT'
 };
 
-_.extend(files['package.json'], pkgs[pkg.type](pkg)['package.json']);
-console.log('files:', files);
+files['package.json'] = JSON.stringify(_.extend(files['package.json'],
+  pkgs[pkg.type](pkg)['package.json']), null, 2);
+
+_.extend(files, {'gulpfile.js': "require('guzzle')();"});
+
 
 var gulp = require('gulp'),
   es = require('event-stream'),
@@ -54,10 +57,10 @@ var gulp = require('gulp'),
   exec = require('child_process').exec,
   path = require('path');
 
-var fakeit = function(name, contents){
+var fudge = function(contents){
   return es.readable(function (_, fn) {
     this.emit('data', new File({
-      path: name,
+      path: '.',
       contents: new Buffer(contents)
     }));
     this.emit('end');
@@ -65,16 +68,33 @@ var fakeit = function(name, contents){
   });
 };
 
-gulp.task('default', function(){
-  fakeit('.', JSON.stringify(files['package.json'], null, 2))
-    .pipe(gulp.dest('./test/package.json'))
-    .pipe(function(){
-      return es.map(function(file, fn){
-        exec('npm install', {cwd: path.dirname(file.path)}, function(err){
-          fn(err, file);
-        });
+var npm = {
+  install: function(){
+    return es.map(function(file, fn){
+      exec('npm install', {cwd: path.dirname(file.path)}, function(err){
+        fn(err, file);
       });
-    }());
+    });
+  },
+  link: function(name){
+    return es.map(function(file, fn){
+      exec('npm link ' + name, {cwd: path.dirname(file.path)}, function(err){
+        fn(err, file);
+      });
+    });
+  }
+};
+
+var dest = process.cwd() + '/' + pkg.name;
+
+gulp.task('default', function(){
+  fudge(files['package.json'])
+    .pipe(gulp.dest(dest + '/package.json'))
+    .pipe(npm.install())
+    .pipe(npm.link('guzzle'));
+
+  fudge("require('guzzle')(require('gulp'));")
+    .pipe(gulp.dest(dest + '/gulpfile.js'));
 });
 
 

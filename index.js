@@ -1,27 +1,28 @@
 "use strict";
 
-var gulp = require('gulp'),
-  gutil = require('gulp-util'),
-  browserify = require('gulp-browserify'),
+console.log('in guzzle');
+
+var browserify = require('gulp-browserify'),
   ecstatic = require('ecstatic'),
   http = require('http'),
   ltld = require('local-tld-lib'),
   fs = require('fs');
 
-module.exports = function(){
-  fs.readFile(process.cwd() + '/package.json', 'utf-8', function(err, data){
-    if(err) return console.error(err);
-    var pkg = JSON.parse(data),
-      type = pkg.guzzle || 'gulp plugin';
+module.exports = function(gulp){
+  console.log('in guz func');
+  var data = fs.readFileSync(process.cwd() + '/package.json', 'utf-8');
+  var pkg = JSON.parse(data),
+    type = pkg.guzzle || 'gulp plugin';
 
-    return gulps[type](pkg);
-  });
+  return gulps[type](pkg, gulp);
 };
 
 // Different types of project templates
 var gulps = {
-  ui: function(pkg){
-    var dest = './.' + name,
+  ui: function(pkg, gulp){
+    console.log('declaring ui tasks');
+    var name = pkg.name,
+      dest = './.' + name,
       src ='./' + name,
       files = [src + '/{img,fonts,css,json,csv}/*', src + '/*.html'];
 
@@ -48,18 +49,19 @@ var gulps = {
 
     gulp.task('build', ['js', 'cp']);
     gulp.task('dev', ['build', 'serve', 'watch']);
+    console.log('finished');
   },
-  'gulp plugin': function (){
+  'gulp plugin': function (pkg, gulp){
     gulp.task('default', function(){
       console.log('@todo');
     });
   },
-  cli: function(){
+  cli: function(pkg, gulp){
     gulp.task('default', function(){
       console.log('@todo');
     });
   },
-  rest: function(){
+  rest: function(pkg, gulp){
     gulp.task('default', function(){
       console.log('@todo');
     });
