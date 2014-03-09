@@ -20,7 +20,9 @@
     "gulp-concat": "^2.1.7",
     "gulp-sterno-manifest": "^0.0.1",
     "yargs": "^1.2.1",
-    "underscore": "^1.6.0"
+    "underscore": "^1.6.0",
+    "through2": "^0.4.1",
+    "event-stream": "^3.1.0"
   },
   "homepage": "http://github.com/imlucas/node-gulpr",
   "repository": {
