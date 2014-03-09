@@ -44,7 +44,7 @@ var gulps = {
     gulp.task('serve', function(){
       http.createServer(ecstatic({root: dest}))
         .listen(ltld.getPort(name));
-      console.log('-> http://' + name + '.dev/', dest, 'port -> ', ltld.getPort(name));
+      console.log('-> http://' + name + '.dev/', '-> ', 'http://localhost:' + ltld.getPort(name) + '/');
     });
 
     gulp.task('build', ['js', 'cp']);
