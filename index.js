@@ -9,7 +9,6 @@ var browserify = require('gulp-browserify'),
   fs = require('fs');
 
 module.exports = function(gulp){
-  console.log('in guz func');
   var data = fs.readFileSync(process.cwd() + '/package.json', 'utf-8');
   var pkg = JSON.parse(data),
     type = pkg.guzzle || 'gulp plugin';
@@ -20,7 +19,6 @@ module.exports = function(gulp){
 // Different types of project templates
 var gulps = {
   ui: function(pkg, gulp){
-    console.log('declaring ui tasks');
     var name = pkg.name,
       dest = './.' + name,
       src ='./' + name,
@@ -49,7 +47,6 @@ var gulps = {
 
     gulp.task('build', ['js', 'cp']);
     gulp.task('dev', ['build', 'serve', 'watch']);
-    console.log('finished');
   },
   'gulp plugin': function (pkg, gulp){
     gulp.task('default', function(){
