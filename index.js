@@ -1,12 +1,25 @@
 "use strict";
 
-console.log('in guzzle');
-
 var browserify = require('gulp-browserify'),
+  less = require('gulp-less'),
+  jade = require('gulp-jade'),
+  ghPages = require('gulp-gh-pages'),
   ecstatic = require('ecstatic'),
   http = require('http'),
   ltld = require('local-tld-lib'),
   fs = require('fs');
+
+var debug = function(){
+    var args = ['guz:'];
+    Array.prototype.slice.call(arguments, 0).map(function(a){
+      if(Array.isArray(a) || typeof a === 'object'){
+        a = JSON.stringify(a, null, 2);
+      }
+      args.push(a);
+    });
+
+    require('gulp-util').log.apply(this, args);
+};
 
 module.exports = function(gulp, dir){
   dir = dir || process.cwd();
@@ -23,46 +36,82 @@ var gulps = {
   ui: function(pkg, gulp){
     var name = pkg.name,
       dest = pkg.dir + '/.' + name,
-      src = pkg.dir + '/',
-      files = [src + '/{img,fonts,css,json,csv}/*', src + '/*.html'];
+      src = pkg.dir,
+      nm = '!' + src + '/node_modules/**',
+      sources = {
+        js: [src + '/index.js'],
+        pages: [nm, src + '/{*,**/*}.jade'],
+        files: [
+          src + '/{img,fonts,json,csv}/*',
+          src + '/*.html'
+        ],
+        less: [src + '/less/*.less']
+      },
+      keys = Object.keys(sources);
+
+    debug('sources ->', sources);
+
+    gulp.task('files', function(){
+      gulp.src(sources.files)
+        .pipe(gulp.dest(dest));
+    });
+
+    gulp.task('pages', function(){
+      gulp.src(sources.pages)
+        .pipe(jade({}))
+        .pipe(gulp.dest(dest));
+    });
 
     gulp.task('js', function(){
-      gulp.src(src + '/index.js')
+      gulp.src(sources.js)
         .pipe(browserify({debug : false}))
         .pipe(gulp.dest(dest));
     });
 
-    gulp.task('watch', function (){
-      gulp.watch([src + '/*.js'], ['js']);
-      gulp.watch(files, ['cp']);
+    gulp.task('less', function(){
+      gulp.src(sources.less)
+        .pipe(less({}))
+        .pipe(gulp.dest(dest));
     });
 
-    gulp.task('cp', function(){
-      gulp.src(files).pipe(gulp.dest(dest));
+
+    gulp.task('watch', function (){
+      keys.map(function(k){
+        gulp.watch(sources[k], [k]);
+      });
     });
+
+    gulp.task('build', keys);
 
     gulp.task('serve', function(){
       http.createServer(ecstatic({root: dest}))
         .listen(ltld.getPort(name));
-      console.log('-> http://' + name + '.dev/', '-> ', 'http://localhost:' + ltld.getPort(name) + '/');
+
+      debug('-> http://' + name + '.dev/', '-> ', 'http://localhost:' + ltld.getPort(name) + '/');
     });
 
-    gulp.task('build', ['js', 'cp']);
+    gulp.task('github-pages', function(){
+      gulp.src(dest + '/**')
+        .pipe(ghPages(pkg.repository.url, 'origin'));
+    });
+
+    gulp.task('deploy', ['build', 'github-pages']);
+
     gulp.task('dev', ['build', 'serve', 'watch']);
   },
   'gulp plugin': function (pkg, gulp){
     gulp.task('default', function(){
-      console.log('@todo');
+      debug('@todo');
     });
   },
   cli: function(pkg, gulp){
     gulp.task('default', function(){
-      console.log('@todo');
+      debug('@todo');
     });
   },
   rest: function(pkg, gulp){
     gulp.task('default', function(){
-      console.log('@todo');
+      debug('@todo');
     });
   }
 };
