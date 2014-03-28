@@ -3,7 +3,6 @@
 var browserify = require('gulp-browserify'),
   less = require('gulp-less'),
   jade = require('gulp-jade'),
-  ghPages = require('gulp-gh-pages'),
   ecstatic = require('ecstatic'),
   http = require('http'),
   ltld = require('local-tld-lib'),
@@ -91,8 +90,28 @@ var gulps = {
     });
 
     gulp.task('github-pages', function(){
-      gulp.src(dest + '/**')
-        .pipe(ghPages(pkg.repository.url, 'origin'));
+      var exec = require('child_process').exec,
+        msg, cmd,
+        remote = pkg.repository.url.replace('git://github.com/', 'git@github.com:');
+
+      debug('deploying', remote);
+      exec('git log --oneline HEAD | head -n 1', {cwd: src}, function(err, stdout){
+        msg = stdout.toString();
+        debug('last commit', msg);
+
+        cmd = [
+          'git init',
+          'rm -rf .DS_Store **/.DS_Store',
+          'git add .',
+          'git commit -m "Deploy: ' + msg + '"',
+          'git push --force ' + remote + ' master:gh-pages',
+          'rm -rf .git'
+        ].join('&&');
+
+        exec(cmd, {cwd: dest}, function(){
+          debug('deployed');
+        });
+      })
     });
 
     gulp.task('deploy', ['build', 'github-pages']);
